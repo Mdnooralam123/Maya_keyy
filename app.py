@@ -2,7 +2,10 @@
 Maya accounts + key generator, Vercel root app.py (WSGI). No api/ folder needed.
 
 Environment variables (Vercel dashboard):
-  ADMIN_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+  ADMIN_TOKEN (optional — agar set nahi to hardcoded niche wala use hoga)
+  UPSTASH_REDIS_REST_URL
+  UPSTASH_REDIS_REST_TOKEN
+
 Routes: /  and /admin.html (admin page), /api/... (JSON API used by the APK and the admin page)
 Rules: one username/password = one login. One key = one login. Time = what the admin set.
 """
@@ -14,11 +17,11 @@ import re
 import secrets
 import time
 import urllib.request
-from urllib.parse import urlparse, parse_qs
 
 UPSTASH_URL = os.environ.get("UPSTASH_REDIS_REST_URL", "")
 UPSTASH_TOKEN = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
-ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
+# Default hardcoded admin token. Env var ADMIN_TOKEN set ho to wahi priority lega.
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "96_1nCXLFkCC2CJuvPASZD1ovIEWF-PM6RLBvdcINhk")
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 DAY = 86_400_000
@@ -89,7 +92,8 @@ def expiry_from(kind, value):
 def is_admin(headers):
     if not ADMIN_TOKEN:
         return False
-    return hmac.compare_digest(headers.get("x-admin-token", "").encode("utf-8"), ADMIN_TOKEN.encode("utf-8"))
+    return hmac.compare_digest(headers.get("x-admin-token", "").encode("utf-8"),
+                               ADMIN_TOKEN.encode("utf-8"))
 
 
 # ---------- routes ----------
@@ -106,7 +110,8 @@ def route_get(path, headers):
             r = get_json("acc:" + u) or {}
             exp = r.get("expires_at", 0)
             out.append({"username": u, "expires_at": exp, "disabled": bool(r.get("disabled")),
-                        "used": bool(r.get("used")), "left_min": max(0, int((exp - now_ms()) / 60000))})
+                        "used": bool(r.get("used")),
+                        "left_min": max(0, int((exp - now_ms()) / 60000))})
         return 200, {"ok": True, "accounts": out}
     return 404, {"ok": False, "message": "Not Found"}
 
@@ -159,10 +164,12 @@ def route_post(path, b, headers):
         if now_ms() > acc["expires_at"]:
             return 200, {"ok": False, "message": "Account ki time khatam ho gayi. Admin se baat karo"}
         if acc.get("used"):
-            return 200, {"ok": False, "message": "Ye username/password pehle hi use ho chuka hai. Admin se naya account lo"}
+            return 200, {"ok": False,
+                         "message": "Ye username/password pehle hi use ho chuka hai. Admin se naya account lo"}
         acc["used"] = True
         set_json("acc:" + username, acc)
-        return 200, {"ok": True, "username": username, "expires_at": acc["expires_at"], "message": "Login ho gaya"}
+        return 200, {"ok": True, "username": username, "expires_at": acc["expires_at"],
+                     "message": "Login ho gaya"}
 
     if path == "/api/admin/account":
         if not is_admin(headers):
@@ -170,7 +177,8 @@ def route_post(path, b, headers):
         username = str(b.get("username", "")).strip().lower()
         password = str(b.get("password", ""))
         if not USER_RE.match(username) or len(password) < 6:
-            return 400, {"ok": False, "message": "username 3-32 (a-z, 0-9, _ . -) aur password 6+ chahiye"}
+            return 400, {"ok": False,
+                         "message": "username 3-32 (a-z, 0-9, _ . -) aur password 6+ chahiye"}
         value = int(b.get("duration_value") or 0)
         unit = b.get("duration_unit") if b.get("duration_unit") in UNIT_MS else "days"
         if value <= 0:
@@ -206,12 +214,15 @@ def route_post(path, b, headers):
         else:
             return 400, {"ok": False, "message": "action galat"}
         set_json("acc:" + username, acc)
-        return 200, {"ok": True, "expires_at": acc["expires_at"], "disabled": bool(acc.get("disabled"))}
+        return 200, {"ok": True, "expires_at": acc["expires_at"],
+                     "disabled": bool(acc.get("disabled"))}
 
     if path == "/api/admin/update":
         if not is_admin(headers):
             return 401, {"ok": False, "message": "admin token galat"}
-        u = {"version": int(b.get("version") or 0), "apk_url": str(b.get("apk_url", "")), "notes": str(b.get("notes", ""))}
+        u = {"version": int(b.get("version") or 0),
+             "apk_url": str(b.get("apk_url", "")),
+             "notes": str(b.get("notes", ""))}
         set_json("cfg:update", u)
         return 200, {"ok": True, "update": u}
 
@@ -254,8 +265,9 @@ def app(environ, start_response):
         code, obj = 500, {"ok": False, "message": str(e)}
 
     body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
-    status = {200: "200 OK", 400: "400 Bad Request", 401: "401 Unauthorized", 404: "404 Not Found",
-              405: "405 Method Not Allowed", 500: "500 Internal Server Error"}.get(code, str(code))
+    status = {200: "200 OK", 400: "400 Bad Request", 401: "401 Unauthorized",
+              404: "404 Not Found", 405: "405 Method Not Allowed",
+              500: "500 Internal Server Error"}.get(code, str(code))
     start_response(status, [("Content-Type", "application/json; charset=utf-8"),
                             ("Content-Length", str(len(body)))] + cors)
     return [body]

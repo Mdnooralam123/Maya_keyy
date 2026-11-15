@@ -79,11 +79,15 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:rgba(0,0
 </div>
 
 <script>
+// ---- hardcoded admin token ----
+const DEFAULT_TOKEN = "96_1nCXLFkCC2CJuvPASZD1ovIEWF-PM6RLBvdcINhk";
+if (!localStorage.getItem("mtok")) localStorage.setItem("mtok", DEFAULT_TOKEN);
+
 const $=id=>document.getElementById(id);
 const T=()=>localStorage.getItem("mtok")||"";
 const BASE=()=>location.origin;
 function saveTok(){const v=$("tok").value.trim();if(!v){$("tmsg").textContent="Token daalo";$("tmsg").className="msg no";return}localStorage.setItem("mtok",v);$("tok").value="";$("tok").placeholder="saved ✓";$("tmsg").textContent="Token save ho gaya";$("tmsg").className="msg ok"}
-function clearTok(){localStorage.removeItem("mtok");$("tok").placeholder="admin token";$("tmsg").textContent="Token hata diya";$("tmsg").className="msg"}
+function clearTok(){localStorage.removeItem("mtok");$("tok").placeholder="admin token";$("tmsg").textContent="Token hata diya (reload pe default wapas aayega)";$("tmsg").className="msg"}
 async function api(path,opt={}){
   if(!T()){return {ok:false,message:"Pehle upar token save karo"}}
   let r;
@@ -136,6 +140,6 @@ async function pushUpd(){
   const r=await api("/api/admin/update",{method:"POST",body:JSON.stringify({version:Number($("uv").value),apk_url:$("ua").value.trim(),notes:$("un").value.trim()})});
   showMsg("umsg",r.ok?"Update bhej diya":(r.message||"Fail"),!!r.ok);
 }
-if(T()){$("tmsg").textContent="Token saved hai ✓";$("tmsg").className="msg ok"}
+if(T()){$("tmsg").textContent="Token saved hai ✓ (default)";$("tmsg").className="msg ok"}
 (async()=>{try{const r=await fetch(BASE()+"/api/update");const u=await r.json();$("ucur").textContent=u.version?("Abhi live update: v"+u.version+(u.apk_url?" — "+u.apk_url:"")):"Abhi koi update live nahi hai"}catch(e){}})();
 </script></body></html>
