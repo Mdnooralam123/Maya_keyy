@@ -1,6 +1,6 @@
 """
-Maya accounts + key generator — Vercel/Local compatible (SQLite fallback).
-Agar aapko data permanently save karna hai, to Upstash Redis use karein.
+Maya accounts + key generator — Vercel/Local compatible (SQLite version).
+Isme kisi Upstash ya Redis ki zarurat nahi hai. Data /tmp folder me save hota hai.
 """
 import hashlib
 import hmac
@@ -12,7 +12,7 @@ import sqlite3
 import threading
 import time
 
-# Token hardcoded
+# Token hardcoded (Vercel env me ADMIN_TOKEN set nahi karna hai)
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "96_1nCXLFkCC2CJuvPASZD1ovIEWF-PM6RLBvdcINhk")
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -132,7 +132,10 @@ def route_post(path, b, headers):
         expires = expiry_from(kind, value)
         if expires is None:
             return 400, {"ok": False, "message": "type lifetime/minutes/hours/days aur value > 0 do"}
-        username = "u" + secrets.token_hex(4)
+        
+        # Yahan username generate hota hai
+        username = "u" + secrets.token_hex(4) 
+        
         password = secrets.token_urlsafe(8)
         create_account(username, password, expires)
         key = make_key()
