@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Maya Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#fff;--muted:#c9d6ff;--acc:#7a5cff;--acc2:#3ad8ff;--ok:#7dffb3;--no:#ff8fa3}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font-family:Nunito,system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 50% 0,#2b3a8f 0,#0c1233 60%,#05071c 100%);padding:20px 16px 48px}
+.top{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+h1{margin:0;font-size:22px}
+h2{margin:0 0 4px;font-size:17px}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(14px);border-radius:24px;padding:18px;margin:0 auto 14px;max-width:560px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+label{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:12px 0 6px}
+input,select,textarea{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.25);color:#fff;font:700 16px Nunito,system-ui;outline:none}
+select option{color:#000}
+input:focus,select:focus,textarea:focus{border-color:var(--acc2);box-shadow:0 0 0 3px #3ad8ff33}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+button{width:100%;margin-top:14px;padding:15px;border:0;border-radius:18px;font:900 17px Nunito,system-ui;color:#0b1020;background:linear-gradient(135deg,var(--acc2),#9d8cff);box-shadow:0 10px 26px #3ad8ff55;cursor:pointer}
+button:disabled{opacity:.6}
+button.ghost{background:rgba(255,255,255,.14);color:#fff;box-shadow:none}
+button.danger{background:linear-gradient(135deg,#ff6b8a,#ff3d6e);color:#fff;box-shadow:0 10px 26px #ff3d6e55}
+.item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,0,0,.25);border-radius:16px;padding:12px 14px;margin-top:10px}
+.item small{display:block;font-size:12px;color:var(--muted);font-weight:800}
+.item .v{font:800 16px ui-monospace,Menlo,monospace;word-break:break-all}
+.cp{width:auto;margin:0;padding:10px 14px;font-size:13px;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;box-shadow:none;white-space:nowrap}
+.msg{margin-top:12px;min-height:20px;text-align:center;font-weight:800;font-size:14px}
+.ok{color:var(--ok)}.no{color:var(--no)}
+.note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;background:rgba(0,0,0,.35);color:#cfe0ff;padding:12px;border-radius:14px;max-height:240px;overflow:auto;margin:10px 0 0}
+.acc{display:flex;justify-content:space-between;align-items:center;gap:8px;background:rgba(0,0,0,.25);border-radius:14px;padding:10px 12px;margin-top:8px;font-size:14px}
+.tag{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.14)}
+</style></head><body>
+<div class="top"><h1>🛠 Maya Admin</h1></div>
+
+<div class="card">
+  <h2>Admin token</h2>
+  <label for="tok">Token (browser me save hoga)</label>
+  <input id="tok" type="password" autocomplete="off" placeholder="admin token">
+  <div class="row"><button class="ghost" onclick="saveTok()">Save</button><button class="ghost" onclick="clearTok()">Hatao</button></div>
+  <div id="tmsg" class="msg"></div>
+</div>
+
+<div class="card">
+  <h2>🔐 Key generator</h2>
+  <p class="note" style="margin:4px 0 6px">Username, password aur key ek saath banti hai. Username aur password ek hi baar dikhte hain.</p>
+  <div class="row">
+    <div><label for="gt">Type</label><select id="gt"><option value="lifetime">Lifetime</option><option value="days" selected>Days</option><option value="hours">Hours</option><option value="minutes">Minutes</option></select></div>
+    <div><label for="gv">Value</label><input id="gv" type="number" value="30" min="1"></div>
+  </div>
+  <button id="gbtn" onclick="genKey()">Key banao</button>
+  <div id="gmsg" class="msg"></div>
+  <div id="gout"></div>
+</div>
+
+<div class="card">
+  <h2>Login accounts</h2>
+  <p class="note" style="margin:4px 0 6px">Manual account (username + password + time) banao, time badhao, band karo, ya delete karo.</p>
+  <label for="au">Username (a-z, 0-9, _ . -)</label><input id="au" placeholder="username">
+  <label for="ap">Password (6+)</label><input id="ap" type="password" placeholder="password">
+  <div class="row"><div><label for="av">Time</label><input id="av" type="number" value="1" min="1"></div><div><label for="avu">Unit</label><select id="avu"><option value="minutes">Minutes</option><option value="hours">Hours</option><option value="days" selected>Days</option></select></div></div>
+  <button onclick="mkAcc()">Account banao</button>
+  <button class="ghost" onclick="listAcc()">Saare accounts dekho</button>
+  <div id="amsg" class="msg"></div>
+  <div id="alist"></div>
+  <label for="ax">Username (action ke liye)</label><input id="ax" placeholder="username">
+  <div class="row"><div><label for="ext">Badhao</label><input id="ext" type="number" value="1" min="1"></div><div><label for="extu">Unit</label><select id="extu"><option value="minutes">Minutes</option><option value="hours">Hours</option><option value="days" selected>Days</option></select></div></div>
+  <div class="row"><button class="ghost" onclick="accAct('extend')">Time badhao</button><button class="ghost" onclick="accAct('disable')">Band karo</button></div>
+  <div class="row"><button class="ghost" onclick="accAct('enable')">Chalu karo</button><button class="danger" onclick="accAct('delete')">Delete</button></div>
+  <div id="aact" class="msg"></div>
+</div>
+
+<div class="card">
+  <h2>APK update</h2>
+  <label for="uv">Version number</label><input id="uv" type="number" placeholder="jaise 52">
+  <label for="ua">APK link (https://...)</label><input id="ua" placeholder="https://...apk">
+  <label for="un">Kya naya hai</label><textarea id="un" rows="2" placeholder="notes"></textarea>
+  <div class="note" style="margin-top:6px">APK ko kisi bhi jagah host karo jo direct download link de (GitHub Releases, Google Drive direct link, ya aapka server), phir uska link yahan daalo.</div>
+  <button onclick="pushUpd()">Update bhejo</button>
+  <div id="umsg" class="msg"></div>
+  <div id="ucur" class="note"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const T=()=>localStorage.getItem("mtok")||"";
+const BASE=()=>location.origin;
+function saveTok(){const v=$("tok").value.trim();if(!v){$("tmsg").textContent="Token daalo";$("tmsg").className="msg no";return}localStorage.setItem("mtok",v);$("tok").value="";$("tok").placeholder="saved ✓";$("tmsg").textContent="Token save ho gaya";$("tmsg").className="msg ok"}
+function clearTok(){localStorage.removeItem("mtok");$("tok").placeholder="admin token";$("tmsg").textContent="Token hata diya";$("tmsg").className="msg"}
+async function api(path,opt={}){
+  if(!T()){return {ok:false,message:"Pehle upar token save karo"}}
+  let r;
+  try{r=await fetch(BASE()+path,Object.assign({headers:{"Content-Type":"application/json","x-admin-token":T()}},opt))}
+  catch(e){return {ok:false,message:"Network error: "+e.message}}
+  try{return await r.json()}catch(e){return {ok:false,message:"Server ne JSON nahi diya (HTTP "+r.status+")"}}
+}
+function cpy(t){const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}a.remove();if(!ok&&navigator.clipboard){navigator.clipboard.writeText(t).catch(()=>{})}return true}
+function row(label,val){const d=document.createElement("div");d.className="item";const l=document.createElement("div");l.style.minWidth="0";l.innerHTML="<small></small><div class='v'></div>";l.querySelector("small").textContent=label;l.querySelector(".v").textContent=val;const b=document.createElement("button");b.className="cp";b.textContent="Copy";b.onclick=()=>{cpy(val);b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy",1400)};d.appendChild(l);d.appendChild(b);return d}
+function showMsg(id,text,ok){const m=$(id);m.textContent=text;m.className="msg "+(ok?"ok":"no")}
+
+async function genKey(){
+  $("gout").innerHTML="";showMsg("gmsg","Ban raha hai...",true);$("gbtn").disabled=true;
+  const body=JSON.stringify({type:$("gt").value,value:Number($("gv").value)});
+  let r=await api("/api/admin/gen",{method:"POST",body});
+  if(r.message==="Not Found"||/not found|route/i.test(r.message||"")){r=await api("/api/admin/key",{method:"POST",body})}
+  $("gbtn").disabled=false;
+  if(!r.ok){showMsg("gmsg",r.message||"Key nahi bani",false);return}
+  showMsg("gmsg","Key ban gayi",true);
+  const o=$("gout");
+  o.appendChild(row("KEY",r.key));o.appendChild(row("USERNAME",r.username));o.appendChild(row("PASSWORD",r.password));
+  const days=Math.max(0,Math.ceil((r.expires_at-Date.now())/86400000));
+  o.appendChild(row("EXPIRES",new Date(r.expires_at).toLocaleString("en-IN")+" ("+days+" din)"));
+}
+async function mkAcc(){
+  const r=await api("/api/admin/account",{method:"POST",body:JSON.stringify({username:$("au").value.trim(),password:$("ap").value,duration_value:Number($("av").value),duration_unit:$("avu").value})});
+  if(!r.ok){showMsg("amsg",r.message||"Fail",false);return}
+  showMsg("amsg","Account ban gaya: "+r.username,true);listAcc();
+}
+async function listAcc(){
+  const r=await api("/api/admin/accounts");
+  const box=$("alist");box.innerHTML="";
+  if(!r.ok){showMsg("amsg",r.message||"List nahi aayi",false);return}
+  if(!r.accounts.length){box.innerHTML="<p class='note'>Abhi koi account nahi.</p>";return}
+  r.accounts.forEach(a=>{const d=document.createElement("div");d.className="acc";
+    const left=a.disabled?"band":(a.left_min>0?a.left_min+" min baaki":"khatam");
+    d.innerHTML="<div><b></b></div><span class='tag'></span>";
+    d.querySelector("b").textContent=a.username;
+    d.lastChild.textContent=(a.used?"used · ":"")+left;
+    box.appendChild(d)});
+}
+async function accAct(action){
+  const body={username:$("ax").value.trim(),action};
+  if(action==="extend"){body.duration_value=Number($("ext").value);body.duration_unit=$("extu").value}
+  const r=await api("/api/admin/account_action",{method:"POST",body:JSON.stringify(body)});
+  showMsg("aact",r.ok?("Ho gaya: "+action):(r.message||"Fail"),!!r.ok);
+  if(r.ok)listAcc();
+}
+async function pushUpd(){
+  const r=await api("/api/admin/update",{method:"POST",body:JSON.stringify({version:Number($("uv").value),apk_url:$("ua").value.trim(),notes:$("un").value.trim()})});
+  showMsg("umsg",r.ok?"Update bhej diya":(r.message||"Fail"),!!r.ok);
+}
+if(T()){$("tmsg").textContent="Token saved hai ✓";$("tmsg").className="msg ok"}
+(async()=>{try{const r=await fetch(BASE()+"/api/update");const u=await r.json();$("ucur").textContent=u.version?("Abhi live update: v"+u.version+(u.apk_url?" — "+u.apk_url:"")):"Abhi koi update live nahi hai"}catch(e){}})();
+</script></body></html>
